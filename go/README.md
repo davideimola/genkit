@@ -99,7 +99,7 @@ Every sample below runs on its own with `go run .`, and its package comment expl
 | [basic‑agents](samples/basic-agents) | Multi-turn agents (inline, prompt-file, and custom-loop) with snapshots and background detach |
 | [basic‑agents‑server](samples/basic-agents-server/main.go) | Serving store-backed and stateless agents over HTTP |
 | [basic‑tool‑interrupts](samples/basic-tool-interrupts/main.go) | Human in the loop (HITL): a tool that pauses for approval and resumes with the answer |
-| [basic‑middleware](samples/basic-middleware) | Model middleware, one program each: [retry-fallback](samples/basic-middleware/retry-fallback/main.go) composes `Retry` and `Fallback` into a cascade that survives a dead model, [filesystem](samples/basic-middleware/filesystem) gives the model file access scoped to a single directory, and [skills](samples/basic-middleware/skills) loads `SKILL.md` personas on demand |
+| [basic‑middleware](samples/basic-middleware) | Model middleware, one program each: [retry-fallback](samples/basic-middleware/retry-fallback/main.go) composes `Retry` and `Fallback` into a cascade that survives a dead model, [filesystem](samples/basic-middleware/filesystem) gives the model file access scoped to a single directory, [skills](samples/basic-middleware/skills) loads `SKILL.md` personas on demand, and [context-compression](samples/basic-middleware/context-compression/main.go) keeps a verbose research loop inside a token budget while the returned history stays complete |
 | [basic‑errors](samples/basic-errors/main.go) | Classifying failures with sentinels and recovering with `errors.Is` |
 | [basic‑durable‑streaming‑exp](samples/basic-durable-streaming-exp/main.go) | Reconnectable streams with replay, on the in-preview `core/x/streaming` API |
 
@@ -864,6 +864,8 @@ The `middleware` plugin also ships with:
 - [`SoftToolErrors`](plugins/middleware/soft_tool_errors.go) — returns tool errors, and calls to tools that do not exist, to the model as the tool's response so it can correct itself, instead of failing the generation. A tool can do the same for a single error by returning `tool.Fail(ctx, err)` (`ai/tool`).
 - [`Filesystem`](samples/basic-middleware/filesystem) — gives the model `list_files` and `read_file` tools (plus `write_file` and `edit_file` when `AllowWriteAccess` is set), all confined to a single `RootDir` via `os.Root` (Go 1.25+) so paths cannot escape via `..`, absolute paths, or symlinks.
 - [`Skills`](samples/basic-middleware/skills) — exposes a library of `SKILL.md` files following the [Agent Skills](https://agentskills.io) specification, so a skill written for any compliant agent works here. Scans `.agents/skills` and `skills` by default, on disk or inside `SkillFS`, so skills can ship in the binary through `//go:embed`. The model sees each skill's name and description, loads one on demand through `use_skill`, and reads the files a skill bundles through `read_skill_file` when `AllowResourceAccess` is set. `Preload` injects a skill up front when the application, rather than the model, decides it applies.
+
+The experimental `middleware/exp` package adds [`ContextCompression`](samples/basic-middleware/context-compression/main.go), which keeps long conversations and tool loops inside a context budget.
 
 [See the retry + fallback sample](samples/basic-middleware/retry-fallback/main.go) for a full composition.
 
