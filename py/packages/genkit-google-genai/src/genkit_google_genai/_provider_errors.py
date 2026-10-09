@@ -32,7 +32,8 @@ from genkit.plugin_api import provider_error
 _RETRY_INFO_TYPE = 'type.googleapis.com/google.rpc.RetryInfo'
 _DURATION = re.compile(r'(\d+(?:\.\d+)?)s')
 
-_TIMEOUT_ERRORS: tuple[type[BaseException], ...] = (httpx.TimeoutException, asyncio.TimeoutError)
+# On Python 3.10, asyncio.TimeoutError is not the builtin TimeoutError, so list both.
+_TIMEOUT_ERRORS: tuple[type[BaseException], ...] = (httpx.TimeoutException, asyncio.TimeoutError, TimeoutError)
 _CONNECTION_ERRORS: tuple[type[BaseException], ...] = (httpx.NetworkError, httpx.RemoteProtocolError, ConnectionError)
 try:
     # The SDK sends over aiohttp when it's installed.
